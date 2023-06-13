@@ -38,7 +38,7 @@ function regulator()
     end
     if #edibles < #bugs/3 and rules["abundantFood"] then 
         table.insert(edibles, edible(math.random(0, VIRTUAL_HEIGHT), math.random(0, VIRTUAL_WIDTH), 10))
-    elseif #edibles <= 3 then 
+    elseif #edibles <= 10 then 
         table.insert(edibles, edible(math.random(0, VIRTUAL_HEIGHT), math.random(0, VIRTUAL_WIDTH), 10))
     end
 end 
