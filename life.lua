@@ -1,6 +1,6 @@
 life = Class{}
 
-function life:init( y , x , fat )
+function life:init( y , x , fat, undead)
 	self.RED = 255
 	self.GREEN = 255
 	self.BLUE = 255
@@ -12,21 +12,34 @@ function life:init( y , x , fat )
     self.dead = false 
     self.multiplycounter = 1
     self.closest = 999999
+    self.childrenCount = 0
+    self.childThreshold = math.random(30, 100)
+    self.childMaxThreshold = math.random(1, 5)
+    self.hasRandomTarget = false
+    self.sx = x 
+    self.sy = y
+    self.lifeSpan = math.random(50, 100)
+    if undead then
+        self.lifeSpan = undead
+    end
 end
 
 function life:update(dt)
     if not self.dead then 
-        if self.fat - self.width < -self.width*0.3 then 
+        self.lifeSpan = self.lifeSpan - dt*0.7
+        print("LIFE: " .. self.lifeSpan)
+        if self.fat <= 0 or self.lifeSpan <= 0 then 
             self.dead = true
         end 
-        self.fat = self.fat - self.width*0.0001*dt
+        self.fat = self.fat - self.width*0.001*dt
         if not self:checkIfEating() then 
             self:lookForFood(dt)
         end
-        if self.width > 30 then 
-            table.insert(bugs, life(self.y+self.width, self.x+self.width, self.fat/2))
+        if self.width > self.childThreshold and self.childrenCount < self.childMaxThreshold then 
+            table.insert(bugs, life(self.y+self.width, self.x+self.width, self.fat/2+5))
             self.width = self.width/2 
-            self.fat = self.fat/2
+            self.fat = self.fat/2-5
+            self.childrenCount = self.childrenCount + 1
         end
 
 
@@ -35,17 +48,26 @@ function life:update(dt)
 end 
 function life:lookForFood(dt)
     self.closest = 9000000
-    local sx, sy = self.x, self.y
     print("looking for food...")
     for i, food in ipairs(edibles) do 
-        if math.sqrt((self.x - food.x)^2 + (self.y-food.y)^2) < self.closest then 
+        dist = math.sqrt((self.x - food.x)^2 + (self.y-food.y)^2)
+        if dist < self.closest and dist < self.fat*20 then 
             self.closest = math.sqrt((self.x - food.x)^2 + (self.y-food.y)^2)
-            sx, sy = food.x, food.y 
+            self.sx, self.sy = food.x, food.y 
             print("going to " .. i)
-            
+            self.hasRandomTarget = true
+        elseif not self.hasRandomTarget then
+            self.sx, self.sy = math.floor(math.random(0, VIRTUAL_WIDTH)), math.floor(math.random(0, VIRTUAL_HEIGHT))
+            print(self.sx)
+            self.hasRandomTarget = true
         end
     end  
-    self:goTo(sx, sy, dt)
+    if self.hasRandomTarget and math.abs(self.x - self.sx) < 5 and math.abs(self.y-self.sy) < 5 then 
+        print("going random" .. self.sx.. " " .. self.sy)
+        self.sx, self.sy = math.floor(math.random(0, VIRTUAL_WIDTH)), math.floor(math.random(0, VIRTUAL_HEIGHT))
+        self.hasRandomTarget = false 
+    end
+    self:goTo(self.sx, self.sy, dt)
 end 
 function life:goTo(x, y, dt)
     self.speed = (10 + self.fat * 0.5 )
@@ -107,5 +129,7 @@ end
 function life:render()
 	love.graphics.setColor(self.RED, self.GREEN, self.BLUE, self.fat*20/200)
     love.graphics.circle('fill', self.x, self.y, self.width)
+    love.graphics.setColor(255,255,255,255)
+    love.graphics.printf(math.floor(self.lifeSpan), smallfont, self.x+self.width, self.y, self.width*10, 'left')
 	love.graphics.setColor(255, 255, 255, 255)
 end

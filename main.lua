@@ -8,14 +8,16 @@ require 'life'
 require 'edible'
 bugs = {}
 edibles = {}
-
+rules = {}
 function love.load()
     math.randomseed(os.time())
-    smallfont = love.graphics.newFont("font.ttf", 25)
+    smallfont = love.graphics.newFont("font.ttf", 15)
+    smallestfont = love.graphics.newFont("font.ttf", 5)
     love.keyboard.setKeyRepeat(true)
     simpleScale.setWindow(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT)
-    table.insert(bugs, life(VIRTUAL_HEIGHT/2, VIRTUAL_WIDTH/2, 10))
+    table.insert(bugs, life(VIRTUAL_HEIGHT/2, VIRTUAL_WIDTH/2, 10, 159))
     table.insert(edibles, edible(20, VIRTUAL_WIDTH/2+5, 4))
+    rules["abundantFood"] = false
 end 
 function love.update(dt)
     love.window.setTitle(#bugs)
@@ -31,7 +33,12 @@ function regulator()
             table.remove(bugs, i)
         end
     end 
-    if #edibles < #bugs/3 then 
+    if #bugs == 0 then 
+        table.insert(bugs, life(VIRTUAL_HEIGHT/2, VIRTUAL_WIDTH/2, 10, 159))
+    end
+    if #edibles < #bugs/3 and rules["abundantFood"] then 
+        table.insert(edibles, edible(math.random(0, VIRTUAL_HEIGHT), math.random(0, VIRTUAL_WIDTH), 10))
+    elseif #edibles <= 3 then 
         table.insert(edibles, edible(math.random(0, VIRTUAL_HEIGHT), math.random(0, VIRTUAL_WIDTH), 10))
     end
 end 
